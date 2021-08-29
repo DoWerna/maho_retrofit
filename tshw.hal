@@ -1,3 +1,4 @@
+# Code für die Tatenlogik übernommen von https://github.com/talla83/tshw-parport
 # Mit setp shw.enc-smooth.gain  kann die Beschleunigung eingestellt werden.
 # und mit setp shw.enc-smooth.scale die Übersetzung
 
