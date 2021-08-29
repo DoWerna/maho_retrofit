@@ -1,0 +1,230 @@
+# Mit setp shw.enc-smooth.gain  kann die Beschleunigung eingestellt werden.
+# und mit setp shw.enc-smooth.scale die Übersetzung
+
+# Wenn halcompile nicht installiert ist dann benötigen wir noch folgendes Paket
+# sudo apt-get install linuxcnc-uspace-dev
+# sudo spt-get install make
+# sudo halcompile --install lsrio16.comp
+
+
+
+# Outputs für die LEDs der Taster                     #leds
+net key-x      => hm2_7i97.0.7i73.0.1.output-06
+net key-y      => hm2_7i97.0.7i73.0.1.output-07
+net key-z      => hm2_7i97.0.7i73.0.1.output-05
+net key-0001   => hm2_7i97.0.7i73.0.1.output-02
+net key-001    => hm2_7i97.0.7i73.0.1.output-03
+net key-01     => hm2_7i97.0.7i73.0.1.output-04
+
+loadrt lut5 names=shw.lock-xyz,shw.lock-step,shw.nor-xyz,shw.nor-step
+addf shw.lock-xyz   servo-thread
+addf shw.lock-step  servo-thread
+addf shw.nor-xyz    servo-thread
+addf shw.nor-step   servo-thread
+
+setp shw.lock-xyz.function 0x16
+setp shw.lock-step.function 0x16
+setp shw.nor-xyz.function 0x01
+setp shw.nor-step.function 0x01
+
+loadrt ilowpass names=shw.enc-smooth
+addf shw.enc-smooth servo-thread
+
+setp shw.enc-smooth.scale 1
+setp shw.enc-smooth.gain 0.025
+setp joint.0.jog-vel-mode 1
+setp axis.x.jog-vel-mode 1
+
+setp joint.1.jog-vel-mode 1
+setp axis.y.jog-vel-mode 1
+
+setp joint.2.jog-vel-mode 1
+setp axis.z.jog-vel-mode 1
+
+addf and2.7 servo-thread
+addf and2.8 servo-thread
+addf and2.9 servo-thread
+
+addf shw.step-choice servo-thread #mux8
+
+net key-0001 => shw.step-choice.sel0
+net key-001  => shw.step-choice.sel1
+net key-01   => shw.step-choice.sel2
+
+setp shw.step-choice.in1 0.001
+setp shw.step-choice.in2 0.01
+setp shw.step-choice.in4 0.1
+
+net step-choice <= shw.step-choice.out
+net step-choice => joint.0.jog-scale axis.x.jog-scale
+net step-choice => joint.1.jog-scale axis.y.jog-scale
+net step-choice => joint.2.jog-scale axis.z.jog-scale
+
+############################################
+# prinzipieller Aufbau der Tastenlogik     #
+#                           ______         #
+#                          |  FF  |        #
+#               oneshot----| S  Q |-- out1 #
+#                          |      |        #
+# key1---------------------| D    |        #
+#                          |      |        #
+#                          |      |        #
+#                        .-| CLK  |        #
+#                        | |      |        #
+#                        | | R    |        #
+#                        | |______|        #
+#                        |                 #
+#                        |                 #
+#                        |  ______         #
+#                        | |  FF  |        #
+#                        | | S  Q |-- out2 #
+#                        | |      |        #
+# key2-------------------+-| D    |        #
+#                        | |      |        #
+#                        | |      |        #
+#                        x-| CLK  |        #
+#                        | |      |        #
+#               oneshot--+-| R    |        #
+#                        | |______|        #
+#                        |                 #
+#                        |                 #
+#                        |  ______         #
+#                        | |  FF  |        #
+#                        | | S  Q |-- out3 #
+#                        | |      |        #
+# key3-------------------+-| D    |        #
+#                        | |      |        #
+#                        | |      |        #
+#                        x-| CLK  |        #
+#         ___            | |      |        #
+# key1---|xor|  oneshot--+-| R    |        #
+#        |   |      ___  | |______|        #
+# key2---|lut|-----|  &| |                 #
+#        |1/2|     |   | |                 #
+# key3---|___|     |lut| |  ______         #
+#                  |2/2| | |  FF  |        #
+#        key-ena---o   |-x-| S  Q |--.     #
+#                  |   |   |      |  |     #
+#                  |   |   |      |  |     #
+#                  |   |   |      |  |     #
+#         ___   .--o___|   |      |  |     #
+# key1---|  1|  |          |      |  |     #
+#        |   |  |          |      |  |     #
+# key2---|   o--+----------| R    |  |     #
+#        |   |  |          |______|  |     #
+# key3---|___|  |____________________|     #
+#                   net lock-***           #
+############################################
+
+loadrt flipflop names=shw.ff-x,shw.ff-y,shw.ff-z,shw.ff-0001,shw.ff-001,shw.ff-01,shw.ff-xyz-lock,shw.ff-step-lock
+
+addf shw.ff-x         servo-thread
+addf shw.ff-y         servo-thread
+addf shw.ff-z         servo-thread
+addf shw.ff-0001      servo-thread
+addf shw.ff-001       servo-thread
+addf shw.ff-01        servo-thread
+addf shw.ff-xyz-lock  servo-thread
+addf shw.ff-step-lock servo-thread
+
+net ff-data-x   <= matrix_kb.0.key.r2c2                  #tasten
+net ff-data-y   <= matrix_kb.0.key.r2c3
+net ff-data-z   <= matrix_kb.0.key.r2c4
+
+net ff-data-x   => shw.lock-xyz.in-0
+net ff-data-y   => shw.lock-xyz.in-1
+net ff-data-z   => shw.lock-xyz.in-2
+
+net ff-data-x   => shw.nor-xyz.in-0
+net ff-data-y   => shw.nor-xyz.in-1
+net ff-data-z   => shw.nor-xyz.in-2
+
+net lock-xyz    <= shw.ff-xyz-lock.out
+net lock-xyz    => shw.lock-xyz.in-3
+net key-ena     => shw.lock-xyz.in-4
+
+net release-xyz <= shw.nor-xyz.out
+net release-xyz => shw.ff-xyz-lock.reset
+
+net ff-clk-xyz  <= shw.lock-xyz.out
+net ff-clk-xyz  => shw.ff-xyz-lock.set
+net ff-clk-xyz  => shw.ff-x.clk
+net ff-clk-xyz  => shw.ff-y.clk
+net ff-clk-xyz  => shw.ff-z.clk
+net ff-data-x   => shw.ff-x.data
+net ff-data-y   => shw.ff-y.data
+net ff-data-z   => shw.ff-z.data
+
+net ff-data0001 <= matrix_kb.0.key.r2c7             #tasten
+net ff-data001  <= matrix_kb.0.key.r2c6
+net ff-data01   <= matrix_kb.0.key.r2c5
+
+net ff-data0001 => shw.lock-step.in-0
+net ff-data001  => shw.lock-step.in-1
+net ff-data01   => shw.lock-step.in-2
+
+net ff-data0001 => shw.nor-step.in-0
+net ff-data001  => shw.nor-step.in-1
+net ff-data01   => shw.nor-step.in-2
+
+net lock-step   <= shw.ff-step-lock.out
+net lock-step   => shw.lock-step.in-3
+net key-ena     => shw.lock-step.in-4
+
+net release-step <= shw.nor-step.out
+net release-step => shw.ff-step-lock.reset
+
+net ff-clk-step <= shw.lock-step.out
+net ff-clk-step => shw.ff-step-lock.set
+net ff-clk-step => shw.ff-0001.clk
+net ff-clk-step => shw.ff-001.clk
+net ff-clk-step => shw.ff-01.clk
+net ff-data0001 => shw.ff-0001.data
+net ff-data001  => shw.ff-001.data
+net ff-data01   => shw.ff-01.data
+
+loadrt oneshot names=shw.set-ff
+addf shw.set-ff servo-thread
+setp shw.set-ff.width 0.1
+
+net set-ff-out <= shw.set-ff.out
+net set-ff-out => shw.ff-x.set
+net set-ff-out => shw.ff-y.reset
+net set-ff-out => shw.ff-z.reset
+net set-ff-out => shw.ff-0001.set
+net set-ff-out => shw.ff-001.reset
+net set-ff-out => shw.ff-01.reset
+
+setp shw.set-ff.in 1
+
+net key-x <= shw.ff-x.out
+net key-x => and2.7.in0
+net ena-x and2.7.out => axis.x.jog-enable
+
+net key-y <= shw.ff-y.out
+net key-y => and2.8.in0
+net ena-y and2.8.out => axis.y.jog-enable
+
+net key-z <= shw.ff-z.out
+net key-z => and2.9.in0
+net ena-z and2.9.out => axis.z.jog-enable
+
+net key-0001 <= shw.ff-0001.out
+net key-001  <= shw.ff-001.out
+net key-01   <= shw.ff-01.out
+
+
+
+#net key-ena <= maho_panel.r2c1_sig-out                         #enable taste
+net maho_panel.r2c1_sig-out => and2.7.in1
+net maho_panel.r2c1_sig-out  => and2.8.in1
+net maho_panel.r2c1_sig-out  => and2.9.in1
+net maho_panel.r2c1_sig-out  => halui.mode.manual
+
+
+net enc-00 <= hm2_7i97.0.7i73.0.1.enc0.count 
+net enc-00 => shw.enc-smooth.in
+net enc-01 <= shw.enc-smooth.out
+net enc-01 => joint.0.jog-counts axis.x.jog-counts
+net enc-01 => joint.1.jog-counts axis.y.jog-counts
+net enc-01 => joint.2.jog-counts axis.z.jog-counts

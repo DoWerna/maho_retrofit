@@ -1,0 +1,129 @@
+# Include your custom_postgui HAL commands here
+# This file will not be overwritten when you run PNCconf again
+
+#net button1 hm2_7i97.0.7i84.0.0.input-15  => or2.0.in0        #enable Button
+net maho_panel.r2c1_sig-out => or2.0.in0        #enable Button
+net machine-is-on or2.0.in1
+net 19k1 or2.0.out => hm2_7i97.0.7i84.0.0.output-02
+net 19k1 => iocontrol.0.emc-enable-in 
+
+net maho_panel.r0c0_sig-out matrix_kb.0.key.r0c0 => gmoccapy.v-button.button-0
+net maho_panel.r0c1_sig-out matrix_kb.0.key.r0c1 => gmoccapy.v-button.button-1
+net maho_panel.r0c2_sig-out matrix_kb.0.key.r0c2 => gmoccapy.v-button.button-2
+net maho_panel.r0c3_sig-out matrix_kb.0.key.r0c3 => gmoccapy.v-button.button-3
+net maho_panel.r0c4_sig-out matrix_kb.0.key.r0c4 => gmoccapy.v-button.button-4
+net maho_panel.r0c5_sig-out matrix_kb.0.key.r0c5 => gmoccapy.v-button.button-5
+net maho_panel.r0c6_sig-out matrix_kb.0.key.r0c6 => gmoccapy.v-button.button-6
+
+net maho_panel.r0c7_sig-out matrix_kb.0.key.r0c7 => gmoccapy.h-button.button-9
+net maho_panel.r1c0_sig-out matrix_kb.0.key.r1c0 => gmoccapy.h-button.button-8
+net maho_panel.r1c1_sig-out matrix_kb.0.key.r1c1 => gmoccapy.h-button.button-7
+net maho_panel.r1c2_sig-out matrix_kb.0.key.r1c2 => gmoccapy.h-button.button-6
+net maho_panel.r1c3_sig-out matrix_kb.0.key.r1c3 => gmoccapy.h-button.button-5
+net maho_panel.r1c4_sig-out matrix_kb.0.key.r1c4 => gmoccapy.h-button.button-4
+net maho_panel.r1c5_sig-out matrix_kb.0.key.r1c5 => gmoccapy.h-button.button-3
+net maho_panel.r1c6_sig-out matrix_kb.0.key.r1c6 => gmoccapy.h-button.button-2
+net maho_panel.r1c7_sig-out matrix_kb.0.key.r1c7 => gmoccapy.h-button.button-1
+net maho_panel.r2c0_sig-out matrix_kb.0.key.r2c0 => gmoccapy.h-button.button-0
+
+
+# clear enable
+net maho_panel.r2c1_sig-out matrix_kb.0.key.r2c1 => gmoccapy.delete-message
+
+# jog 
+
+net maho_panel.r5c3_sig-out matrix_kb.0.key.r5c3 => gmoccapy.jog.axis.jog-x-plus
+net maho_panel.r5c2_sig-out matrix_kb.0.key.r5c2 => gmoccapy.jog.axis.jog-x-minus
+net maho_panel.r5c5_sig-out matrix_kb.0.key.r5c5 => gmoccapy.jog.axis.jog-y-plus
+net maho_panel.r5c1_sig-out matrix_kb.0.key.r5c1 => gmoccapy.jog.axis.jog-y-minus
+net maho_panel.r5c4_sig-out matrix_kb.0.key.r5c4 => gmoccapy.jog.axis.jog-z-plus
+net maho_panel.r7c5_sig-out matrix_kb.0.key.r7c5 => gmoccapy.jog.axis.jog-z-minus
+
+#turtle
+
+net maho_panel.r6c7_sig-out matrix_kb.0.key.r6c7 => toggle.0.in 
+net maho_panel.toggleturtle toggle.0.out             gmoccapy.jog.turtle-jog 
+
+#cooling
+
+net maho_panel.r4c1_sig-out matrix_kb.0.key.r4c1 => toggle.1.in 
+net maho_panel.toggleflood  toggle.1.out             toggle2nist.0.in 
+net maho_panel.coolantison  halui.flood.is-on        toggle2nist.0.is-on
+net maho_panel.setfloodon   toggle2nist.0.on         halui.flood.on 
+net maho_panel.setflootoff  toggle2nist.0.off        halui.flood.off
+
+#spindle
+net spindle-cw not.0.in 
+net spindle-ccw not.1.in 
+net spindle-not-cw not.0.out
+net spindle-not-ccw not.1.out
+net spindle-not-cw and2.1.in0
+net maho_panel.r4c4_sig-out matrix_kb.0.key.r4c4 and2.1.in1
+net spindle-manual-cw and2.1.out
+net spindle-not-ccw and2.2.in0
+net maho_panel.r4c2_sig-out matrix_kb.0.key.r4c2 and2.2.in1
+net spindle-manual-ccw and2.2.out 
+net spindle-manual-stop matrix_kb.0.key.r4c3 
+net maho_panel.r4c7_sig-out matrix_kb.0.key.r4c7 gmoccapy.spindle.reset-spindle-override
+net maho_panel.r4c6_sig-out matrix_kb.0.key.r4c6 gmoccapy.spc_spindle.increase 
+net maho_panel.r4c5_sig-out matrix_kb.0.key.r4c5 gmoccapy.spc_spindle.decrease 
+
+#feed
+net maho_panel.r3c7_sig-out matrix_kb.0.key.r3c7 
+net maho_panel.r3c4_sig-out matrix_kb.0.key.r3c4
+net maho_panel.r3c6_sig-out matrix_kb.0.key.r3c6 
+net maho_panel.r3c5_sig-out matrix_kb.0.key.r3c5
+setp halui.feed-override.direct-value true
+setp halui.rapid-override.direct-value true
+net maho_panel.r3c7_sig-out muxfeed.sel0 
+net maho_panel.r3c4_sig-out muxfeed.sel1 
+net maho_panel.r3c7_sig-out or2.1.in0 
+net maho_panel.r3c4_sig-out or2.1.in1 
+setp muxfeed.in0 1
+setp muxfeed.in1 0
+setp muxfeed.in2 10
+net maho_panel.r3c4-or-r3c7_sig-out or2.1.out halui.feed-override.count-enable
+net maho_panel.r3c4-or-r3c7_sig-out halui.rapid-override.count-enable
+net muxfeed  muxfeed.out conv-float-s32.0.in
+net feedv conv-float-s32.0.out halui.feed-override.counts
+net feedv halui.rapid-override.counts
+#net maho_panel.r3c5_sig-out gmoccapy.spc_feed.increase gmoccapy.spc_rapid.increase
+#net maho_panel.r3c6_sig-out gmoccapy.spc_feed.decrease gmoccapy.spc_rapid.decrease
+net maho_panel.r3c5_sig-out halui.feed-override.increase halui.rapid-override.increase
+net maho_panel.r3c6_sig-out halui.feed-override.decrease halui.rapid-override.decrease
+
+#run
+net maho_panel.r3c3_sig-out matrix_kb.0.key.r3c3
+net maho_panel.r3c3_sig-out halui.mode.auto and2.3.in0 
+net maho_panel.program-is-idle and2.3.in1  halui.program.is-idle
+net maho_panel.run halui.program.run and2.3.out
+
+#Step 
+net maho_panel.r3c2_sig-out matrix_kb.0.key.r3c2
+net maho_panel.r3c2_sig-out and2.4.in1
+net pause-on and2.4.in0
+net maho_panel.next and2.4.out halui.program.step
+
+#Pause
+net maho_panel.r3c1_sig-out matrix_kb.0.key.r3c1
+net maho_panel.r3c1_sig-out and2.6.in0 and2.5.in0 
+net pause-on toggle2nist.1.is-on and2.6.in1 <= halui.program.is-paused
+net run-on and2.5.in1 <= halui.program.is-running
+net pause-sig or2.2.in0 <= and2.6.out
+net resume-sig or2.2.in1 <= and2.5.out
+net toggle-ok toggle.2.in <= or2.2.out
+net togglesig toggle2nist.1.in <= toggle.2.out
+net toggleon halui.program.pause <= toggle2nist.1.on
+net toggleoff halui.program.resume <= toggle2nist.1.off
+
+
+#Stop
+
+net maho_panel.r7c2_sig-out matrix_kb.0.key.r7c2
+net maho_panel.r7c2_sig-out halui.program.stop
+
+#temporary direkt lube
+net maho_panel.r6c6_sig-out matrix_kb.0.key.r6c6 hm2_7i97.0.7i84.0.0.output-09
+
+ 
+
