@@ -259,9 +259,9 @@ net spindle-output        <=  pid.s.output
 
 # ---PWM Generator signals/setup---
 
-setp   [HMOT](CARD0).pwmgen.05.output-type 1 #PWM pin0
-setp   [HMOT](CARD0).pwmgen.05.offset-mode 1 # offset mode so 50% = 0
-setp   [HMOT](CARD0).pwmgen.05.scale   [SPINDLE_0]OUTPUT_SCALE
+setp   [HMOT](CARD0).pwmgen.03.output-type 1 #PWM pin0
+setp   [HMOT](CARD0).pwmgen.03.offset-mode 1 # offset mode so 50% = 0
+setp   [HMOT](CARD0).pwmgen.03.scale   [SPINDLE_0]OUTPUT_SCALE
 
 #[SPINDLE_0]OUTPUT_SCALE
 
