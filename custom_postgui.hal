@@ -127,6 +127,12 @@ net maho_panel.r7c2_sig-out halui.program.stop
 
 #lube message
 net gmoccapy-lube-fault message.0.trigger lube.fault
+setp message.0.force true
 
+
+#temporary gearchange
+net maho_panel.r6c6_sig-out matrix_kb.0.key.r6c6 hm2_7i97.0.7i84.0.0.output-05
+net maho_panel.r7c1_sig-out matrix_kb.0.key.r7c1 hm2_7i97.0.7i84.0.0.output-06
+net maho_panel.r6c1_sig-out matrix_kb.0.key.r6c1 hm2_7i97.0.7i84.0.0.output-07
  
 
