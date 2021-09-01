@@ -123,7 +123,10 @@ net maho_panel.r7c2_sig-out matrix_kb.0.key.r7c2
 net maho_panel.r7c2_sig-out halui.program.stop
 
 #temporary direkt lube
-net maho_panel.r6c6_sig-out matrix_kb.0.key.r6c6 hm2_7i97.0.7i84.0.0.output-09
+#net maho_panel.r6c6_sig-out matrix_kb.0.key.r6c6 hm2_7i97.0.7i84.0.0.output-09
+
+#lube message
+net gmoccapy-lube-fault message.0.trigger lube.fault
 
  
 
