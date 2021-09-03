@@ -122,9 +122,6 @@ net toggleoff halui.program.resume <= toggle2nist.1.off
 net maho_panel.r7c2_sig-out matrix_kb.0.key.r7c2
 net maho_panel.r7c2_sig-out halui.program.stop
 
-#temporary direkt lube
-#net maho_panel.r6c6_sig-out matrix_kb.0.key.r6c6 hm2_7i97.0.7i84.0.0.output-09
-
 #lube message
 net gmoccapy-lube-fault message.0.trigger lube.fault
 setp message.0.force true
@@ -134,5 +131,10 @@ setp message.0.force true
 net maho_panel.r6c6_sig-out matrix_kb.0.key.r6c6 hm2_7i97.0.7i84.0.0.output-05
 net maho_panel.r7c1_sig-out matrix_kb.0.key.r7c1 hm2_7i97.0.7i84.0.0.output-06
 net maho_panel.r6c1_sig-out matrix_kb.0.key.r6c1 hm2_7i97.0.7i84.0.0.output-07
- 
+
+
+#message öllevel
+net message.oillevel hm2_7i97.0.7i84.0.0.input-01-not  message.1.trigger
+setp message.1.force true
+
 
