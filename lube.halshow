@@ -1,1 +1,1 @@
-pin+lube.delay pin+lube.fault pin+lube.machine_status pin+lube.pressuresw_floatsw pin+lube.reset pin+lube.run pin+lube.spindle_status pin+message.0.force pin+message.0.time pin+message.0.trigger
+pin+lube.delay pin+lube.fault pin+lube.machine_status pin+lube.pressuresw_floatsw pin+lube.reset pin+lube.run pin+lube.spindle_status pin+message.0.force pin+message.0.time pin+message.0.trigger pin+lube.fault2
