@@ -11,7 +11,7 @@ loadrt hm2_eth board_ip="192.168.1.121" config=" num_encoders=6 num_pwmgens=6 nu
 setp    [HMOT](CARD0).watchdog.timeout_ns 5000000
 loadrt pid names=pid.x,pid.y,pid.z,pid.s
 
-loadrt or2 count=3
+loadrt or2 count=4
 loadrt and2 count=11
 loadrt matrix_kb config=8x8
 loadrt toggle count=4
@@ -34,6 +34,7 @@ addf [HMOT](CARD0).write      servo-thread
 addf or2.0 servo-thread
 addf or2.1 servo-thread #feed
 addf or2.2 servo-thread #pause
+addf or2.3 servo-thread #gear
 addf and2.0 servo-thread
 addf and2.1 servo-thread
 addf and2.2 servo-thread 
