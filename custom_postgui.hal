@@ -53,8 +53,8 @@ net maho_panel.setfloodon   toggle2nist.0.on         halui.flood.on
 net maho_panel.setflootoff  toggle2nist.0.off        halui.flood.off
 
 #spindle
-net spindle-cw not.0.in 
-net spindle-ccw not.1.in 
+net spindle-forward not.0.in 
+net spindle-reverse not.1.in 
 net spindle-not-cw not.0.out
 net spindle-not-ccw not.1.out
 net spindle-not-cw and2.1.in0

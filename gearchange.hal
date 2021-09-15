@@ -9,12 +9,12 @@
 # EMC motion
 ################################################################
 
-#net spindle-ready => motion.spindle-at-speed
-#net spindle-speed <= motion.spindle-speed-out
-#net spindle-speed-fb => motion.spindle-speed-in
-#net spindle-forward <= motion.spindle-forward
-#net spindle-reverse <= motion.spindle-reverse
-#net spindle-brake <= motion.spindle-brake
+net spindle-ready => spindle.0.at-speed
+net spindle-speed <= spindle.0.speed-out   #spindle-vel-cmd-rpm
+net spindle-speed-fb => spindle.0.speed-in
+net spindle-forward <= spindle.0.forward
+net spindle-reverse <= spindle.0.reverse
+net spindle-brake              <=  spindle.0.brake
 
 ################################################################
 # Transmission
@@ -34,13 +34,14 @@ setp transm.min-voltage [SPINDLE]MIN_VOLTAGE
 net spindle-speed => transm.spindle-speed
 net aout-voltage-spindle => transm.spindle-voltage-fb
 net spindle-brake => transm.spindle-brake
-net din-spindle-stopped => transm.spindle-stopped
-net din-transm-red-left => transm.reducer-left
-net din-transm-red-right => transm.reducer-right
-net din-transm-inp-left => transm.input-left
-net din-transm-inp-right => transm.input-right
+net din-spindle-stopped hm2_7i97.0.7i84.0.0.input-03 => transm.spindle-stopped
+net din-transm-inp-left hm2_7i97.0.7i84.0.0.input-04-not => transm.input-left
+net din-transm-inp-right hm2_7i97.0.7i84.0.0.input-04 => transm.input-right
+net din-transm-red-left hm2_7i97.0.7i84.0.0.input-05-not => transm.reducer-left
+net din-transm-red-right hm2_7i97.0.7i84.0.0.input-05 => transm.reducer-right
 net auto-mode => transm.auto-mode
-net dout-estop => transm.estop
+sets auto-mode 1
+net maschine-ein => transm.estop
 
 net spindle-speed-fb <= transm.spindle-speed-fb
 net spindle-voltage <= transm.spindle-voltage
@@ -48,7 +49,7 @@ net dout-transm-red <= transm.reducer-motor
 net dout-transm-inp <= transm.input-motor
 net dout-transm-turn-right <= transm.motor-turn-right
 net transm-pos <= transm.pos-actual
-net spindle-transm-switch <= transm.transm-switch
+# net spindle-transm-switch <= transm.transm-switch
 net spindle-transm-ready <= transm.ready
 net transm-error <= transm.error
 
@@ -68,7 +69,7 @@ net din-spindle-over-current => spindle-mh500.over-current
 net spindle-voltage => spindle-mh500.voltage-in
 net spindle-transm-switch => spindle-mh500.transm-switch
 net spindle-transm-ready => spindle-mh500.transm-ready
-net dout-estop => spindle-mh500.estop
+net maschine-ein => spindle-mh500.estop
 
 net aout-voltage-spindle <= spindle-mh500.voltage-out
 net dout-spindle-enable hm2_7i97.0.7i84.0.0.output-03 <= spindle-mh500.enable-amp

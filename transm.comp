@@ -89,16 +89,16 @@ typedef struct {
 } transm_data;
 
 EXTRA_SETUP() {
-  data.pos[0].reducer_state = SWITCH_LEFT;
-  data.pos[0].input_state   = SWITCH_RIGHT;
+  data.pos[0].reducer_state = SWITCH_RIGHT;
+  data.pos[0].input_state   = SWITCH_LEFT;
 
   data.pos[1].reducer_state = SWITCH_LEFT;
-  data.pos[1].input_state   = SWITCH_LEFT;
+  data.pos[1].input_state   = SWITCH_RIGHT;
 
   data.pos[2].reducer_state = SWITCH_RIGHT;
   data.pos[2].input_state   = SWITCH_RIGHT;
 
-  data.pos[3].reducer_state = SWITCH_RIGHT;
+  data.pos[3].reducer_state = SWITCH_LEFT;
   data.pos[3].input_state   = SWITCH_LEFT;
   return 0;
 }
