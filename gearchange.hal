@@ -1,0 +1,91 @@
+#gearchange
+################################################################
+################################################################
+# Spindle parts
+################################################################
+################################################################
+
+################################################################
+# EMC motion
+################################################################
+
+#net spindle-ready => motion.spindle-at-speed
+#net spindle-speed <= motion.spindle-speed-out
+#net spindle-speed-fb => motion.spindle-speed-in
+#net spindle-forward <= motion.spindle-forward
+#net spindle-reverse <= motion.spindle-reverse
+#net spindle-brake <= motion.spindle-brake
+
+################################################################
+# Transmission
+################################################################
+
+setp transm.stop-timeout [SPINDLE]STOP_TIMEOUT
+setp transm.switch-timeout [SPINDLE]TRANSM_TIMEOUT
+setp transm.overrun-time [SPINDLE]TRANSM_OVERRUN_TIME
+setp transm.setup-time [SPINDLE]TRANSM_SETUP_TIME
+setp transm.max-rpm-1 [SPINDLE]TRANSM_POS1_MAXSPEED
+setp transm.max-rpm-2 [SPINDLE]TRANSM_POS2_MAXSPEED
+setp transm.max-rpm-3 [SPINDLE]TRANSM_POS3_MAXSPEED
+setp transm.max-rpm-4 [SPINDLE]TRANSM_POS4_MAXSPEED
+setp transm.max-voltage [SPINDLE]MAX_VOLTAGE
+setp transm.min-voltage [SPINDLE]MIN_VOLTAGE
+
+net spindle-speed => transm.spindle-speed
+net aout-voltage-spindle => transm.spindle-voltage-fb
+net spindle-brake => transm.spindle-brake
+net din-spindle-stopped => transm.spindle-stopped
+net din-transm-red-left => transm.reducer-left
+net din-transm-red-right => transm.reducer-right
+net din-transm-inp-left => transm.input-left
+net din-transm-inp-right => transm.input-right
+net auto-mode => transm.auto-mode
+net dout-estop => transm.estop
+
+net spindle-speed-fb <= transm.spindle-speed-fb
+net spindle-voltage <= transm.spindle-voltage
+net dout-transm-red <= transm.reducer-motor
+net dout-transm-inp <= transm.input-motor
+net dout-transm-turn-right <= transm.motor-turn-right
+net transm-pos <= transm.pos-actual
+net spindle-transm-switch <= transm.transm-switch
+net spindle-transm-ready <= transm.ready
+net transm-error <= transm.error
+
+################################################################
+# Spindle control
+################################################################
+
+setp spindle-mh500.max-voltage [SPINDLE]MAX_VOLTAGE
+setp spindle-mh500.tms-voltage [SPINDLE]TRANSM_SWITCH_VOLTAGE
+setp spindle-mh500.tms-time [SPINDLE]TRANSM_ALTER_TIME
+setp spindle-mh500.ramp-volts-per-sec [SPINDLE]RAMP_VOLTS_PER_SEC
+setp spindle-mh500.fan-off-delay [SPINDLE]FAN_OFF_DELAY
+
+net spindle-brake => spindle-mh500.brake-in
+net din-spindle-at-speed hm2_7i97.0.7i84.0.0.input-02 => spindle-mh500.at-speed
+net din-spindle-over-current => spindle-mh500.over-current
+net spindle-voltage => spindle-mh500.voltage-in
+net spindle-transm-switch => spindle-mh500.transm-switch
+net spindle-transm-ready => spindle-mh500.transm-ready
+net dout-estop => spindle-mh500.estop
+
+net aout-voltage-spindle <= spindle-mh500.voltage-out
+net dout-spindle-enable hm2_7i97.0.7i84.0.0.output-03 <= spindle-mh500.enable-amp
+net dout-spindle-fan <= spindle-mh500.fan
+net spindle-ready <= spindle-mh500.ready
+net spindle-error <= spindle-mh500.error
+
+################################################################
+# analog outputs
+################################################################
+
+# Output for spindle (value in Volts)
+setp   [HMOT](CARD0).pwmgen.05.output-type 1 #PWM pin0
+setp   [HMOT](CARD0).pwmgen.05.offset-mode 1 # offset mode so 50% = 0
+setp   [HMOT](CARD0).pwmgen.05.scale   [SPINDLE]OUTPUT_SCALE
+net aout-voltage-spindle      => [HMOT](CARD0).pwmgen.05.value
+setp [HMOT](CARD0).pwmgen.05.enable 1
+
+#setp mdsio_pci.0.dac.0.ch4-offset [SPINDLE]OUTPUT_OFFSET
+

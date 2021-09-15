@@ -4,6 +4,8 @@
 # If you make changes to this file, they will be
 # overwritten when you run PNCconf again
 
+
+
 loadrt [KINS]KINEMATICS
 loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS
 loadrt hostmot2
@@ -276,7 +278,7 @@ setp   [HMOT](CARD0).pwmgen.03.scale   [SPINDLE_0]OUTPUT_SCALE
 
 net spindle-output      => [HMOT](CARD0).pwmgen.03.value
 net spindle-enable      => [HMOT](CARD0).pwmgen.03.enable
-net spindle-enable      => hm2_7i97.0.7i84.0.0.output-03
+# net spindle-enable      => hm2_7i97.0.7i84.0.0.output-03
 
 # ---Encoder feedback signals/setup---
 
@@ -392,6 +394,12 @@ net machine-is-enabled lube.machine_status <= motion.motion-enabled
 #net spindle-on lube.spindle_status <= motion.spindle-on
 net spindle-enable lube.spindle_status
 net lube-ps-float-sw lube.pressuresw_floatsw <= hm2_7i97.0.7i84.0.0.input-06
+
+# Gearchange
+source gearchange.hal
+
+
+
 
 
 
