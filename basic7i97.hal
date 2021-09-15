@@ -21,6 +21,7 @@ loadrt mux8 names=muxfeed,shw.step-choice
 loadrt conv_float_s32
 loadrt edge count=1 #tool 
 loadrt message count=3 messages="Zentralschmierung ohne Öldruck,Ölstand KSS Lüfter Hauptantrieb,Öldruckschalter defekt"
+loadrt transm 
 
 addf [HMOT](CARD0).read       servo-thread
 addf motion-command-handler   servo-thread
@@ -58,6 +59,7 @@ addf edge.0 servo-thread #tool
 addf message.0 servo-thread
 addf message.1 servo-thread
 addf message.2 servo-thread
+addf transm servo-thread
 
 # Keycode
 net keys matrix_kb.0.keycode hm2_7i97.0.7i73.0.1.keycode
