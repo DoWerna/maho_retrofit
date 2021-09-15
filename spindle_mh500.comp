@@ -1,0 +1,131 @@
+component spindle_mh500 "MAHO MH700C spindle";
+
+author "Sascha Ittner";
+license "GPL";
+
+option singleton yes;
+
+pin in bit brake_in;
+pin in bit at_speed;
+pin in bit over_current;
+pin in float voltage_in;
+pin in bit transm_switch;
+pin in bit transm_ready;
+pin in bit estop;
+
+pin out float voltage_out;
+pin out bit enable_amp;
+pin out bit ready;
+pin out bit error;
+pin out bit fan;
+
+param rw float max_voltage = 9.000 "maximum spindle cmd voltage";
+param rw float tms_voltage = 0.075 "spindle voltage for tramsmition switch";
+param rw float tms_time = 1.0 "spindle alternation time for tramsmition switch";
+param rw float ramp_volts_per_sec = 1.0 "rampup/-down volts per second";
+param rw float fan_off_delay = 60.0 "fan off delay";
+
+variable double tms_timer;
+variable int tms_dir;
+variable int over_current_old;
+variable double fan_timer;
+
+function _;
+
+;;
+
+FUNCTION(_) {
+  double period_sec;
+  double voltage_ramp;
+  int ramp_done;
+
+  period_sec = (double)period * 1e-9;
+
+  // handle ermergency stop
+  if (!estop) {
+    voltage_out = 0;
+    enable_amp = 0;
+    ready = 0;
+    error = 0;
+    tms_timer = 0;
+    tms_dir = 0;
+    over_current_old = 0;
+    return;
+  }
+
+  if (transm_switch) {
+    // alternate slow move while transmission switch
+    if (tms_timer <= 0) {
+      tms_dir = !tms_dir;
+      tms_timer += tms_time;  
+    } else {
+      tms_timer -= period_sec;  
+    }
+
+    voltage_ramp = tms_dir ? tms_voltage : -tms_voltage;
+  } else {
+    // normal operation
+    tms_timer = 0;
+    tms_dir = 0;
+
+    voltage_ramp = voltage_in;
+
+    if (brake_in) {
+      voltage_ramp = 0;
+    }
+  }
+
+  // limit spindle voltage
+  if (voltage_ramp > max_voltage) {
+    voltage_ramp = max_voltage;
+  }
+  if (voltage_ramp < -max_voltage) {
+    voltage_ramp = -max_voltage;
+  }
+
+  // ramp generator
+  ramp_done = 1;
+  if (voltage_out < voltage_ramp) {
+    ramp_done = 0;
+    voltage_out += ramp_volts_per_sec * period_sec;
+    if (voltage_out >= voltage_ramp) {
+      ramp_done = 1;
+      voltage_out = voltage_ramp;
+    }
+  }
+  if (voltage_out > voltage_ramp) {
+    ramp_done = 0;
+    voltage_out -= ramp_volts_per_sec * period_sec;
+    if (voltage_out <= voltage_ramp) {
+      ramp_done = 1;
+      voltage_out = voltage_ramp;
+    }
+  }
+
+  enable_amp = !brake_in || (voltage_ramp != 0) || (voltage_out != 0);
+
+  ready = at_speed && ramp_done && transm_ready;
+
+  // handle errors
+  error = over_current;
+  if (over_current && !over_current_old) {
+    rtapi_print_msg(RTAPI_MSG_ERR, "mh700c-spindle: Current limit exceeded.\n");
+  }
+  over_current_old = over_current;
+
+  // fan control
+  if (enable_amp) {
+    fan_timer = fan_off_delay;
+    fan = 1;
+  } else if (fan_timer > 0) {
+    fan_timer -= period_sec;
+    fan = 1;
+  } else {
+    fan_timer = 0;
+    fan = 0;
+  }
+
+}
+
+
+

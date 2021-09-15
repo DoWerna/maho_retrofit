@@ -1,0 +1,5 @@
+Damit die Schaltung fuktioniert einmalig
+
+sudo halcompile --install transm.comp
+sudo halcompile --install spindle_mh500.comp 
+
