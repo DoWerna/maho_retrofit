@@ -40,16 +40,15 @@ net din-transm-inp-right hm2_7i97.0.7i84.0.0.input-04 => transm.input-right
 net din-transm-red-left hm2_7i97.0.7i84.0.0.input-05-not => transm.reducer-left
 net din-transm-red-right hm2_7i97.0.7i84.0.0.input-05 => transm.reducer-right
 net auto-mode => transm.auto-mode
-sets auto-mode 1
+#sets auto-mode 1
 net maschine-ein => transm.estop
 
 net spindle-speed-fb <= transm.spindle-speed-fb
 net spindle-voltage <= transm.spindle-voltage
-net dout-transm-red <= transm.reducer-motor
-net dout-transm-inp <= transm.input-motor
-net dout-transm-turn-right <= transm.motor-turn-right
+net dout-transm-inp hm2_7i97.0.7i84.0.0.output-05 <= transm.input-motor
+net dout-transm-turn-right hm2_7i97.0.7i84.0.0.output-07 <= transm.motor-turn-right
 net transm-pos <= transm.pos-actual
-# net spindle-transm-switch <= transm.transm-switch
+net spindle-transm-switch <= transm.transm-switch
 net spindle-transm-ready <= transm.ready
 net transm-error <= transm.error
 

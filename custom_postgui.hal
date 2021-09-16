@@ -136,14 +136,14 @@ setp message.2.force true
 #net maho_panel.r7c1_sig-out matrix_kb.0.key.r7c1 hm2_7i97.0.7i84.0.0.output-06
 #net maho_panel.r6c1_sig-out matrix_kb.0.key.r6c1 hm2_7i97.0.7i84.0.0.output-07
 
-net maho_panel.r6c6_sig-out matrix_kb.0.key.r6c6 
-net maho_panel.r7c1_sig-out matrix_kb.0.key.r7c1 hm2_7i97.0.7i84.0.0.output-06
-net maho_panel.r6c1_sig-out matrix_kb.0.key.r6c1 
+#net maho_panel.r6c6_sig-out matrix_kb.0.key.r6c6 
+#net maho_panel.r7c1_sig-out matrix_kb.0.key.r7c1 hm2_7i97.0.7i84.0.0.output-06
+#net maho_panel.r6c1_sig-out matrix_kb.0.key.r6c1 
 
-net maho_panel.r6c1_sig-out hm2_7i97.0.7i84.0.0.output-07 
-net maho_panel.r6c1_sig-out or2.3.in0
-net maho_panel.r6c6_sig-out or2.3.in1
-net maho_panel.k1 or2.3.out hm2_7i97.0.7i84.0.0.output-05 
+#net maho_panel.r6c1_sig-out hm2_7i97.0.7i84.0.0.output-07 
+#net maho_panel.r6c1_sig-out or2.3.in0
+#net maho_panel.r6c6_sig-out or2.3.in1
+#net maho_panel.k1 or2.3.out hm2_7i97.0.7i84.0.0.output-05 
 
 
 

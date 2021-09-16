@@ -18,7 +18,6 @@ pin in bit estop;
 
 pin out float spindle_speed_fb;
 pin out float spindle_voltage;
-pin out bit reducer_motor;
 pin out bit input_motor;
 pin out bit motor_turn_right;
 pin out bit transm_switch;
@@ -52,18 +51,11 @@ function _;
 #define SWITCH_LEFT  0
 #define SWITCH_RIGHT 1
 
-#define STATE_IDLE             0
+#define STATE_IDLE             0  
 #define STATE_WAIT_STOP        1
-#define STATE_INPUT_SET        2
-#define STATE_INPUT_DIR        3
-#define STATE_INPUT_MOVE       4
-#define STATE_INPUT_OVERRUN    5
-#define STATE_INPUT_WAIT       6
-#define STATE_REDUCER_SET      7
-#define STATE_REDUCER_DIR      8
-#define STATE_REDUCER_MOVE     9
-#define STATE_REDUCER_OVERRUN 10
-#define STATE_REDUCER_WAIT    11
+#define SWITCH1                2
+#define SWITCH2                3
+
 #define STATE_ERROR           12
 
 #define CHECK_SWITCH_POS(in_left, in_right, state) (state == SWITCH_LEFT ? (in_left && !in_right) : (!in_left && in_right))
@@ -86,6 +78,8 @@ typedef struct {
   int enable_auto_switch;
   int target_pos;
   double timer;
+
+
 } transm_data;
 
 EXTRA_SETUP() {
@@ -110,11 +104,14 @@ FUNCTION(_) {
   int voltage_change;
   int i;
   int curr_pos, opti_pos;
+  int curr_pos_old = 5;
   int selected;
   double min_rpm, all_min_rpm, all_max_rpm;
   double last_buffer, curr_buffer;
   int lock;
   int req_state;
+  double timer2 =0.3;
+  int poslong;
 
   // get period in seconds
   period_sec = (double)period * 1e-9;
@@ -207,8 +204,8 @@ FUNCTION(_) {
   }
 
   // update debug data
-  pos_actual = (double)(curr_pos + 1);
-  pos_optimal = (double)(opti_pos + 1);
+  pos_actual = (double)(curr_pos);
+  pos_optimal = (double)(opti_pos);
 
   // force pos ok, if optimal pos is selected
   // (needed for min/max speed fallback)
@@ -245,12 +242,11 @@ FUNCTION(_) {
   if (data.timer > 0) {
     data.timer -= period_sec;
   }
-
-  // state machine for switching
+// state machine for switching
   switch (pos_state) {
     case STATE_IDLE:
-      reducer_motor = 0;
       input_motor = 0;
+      motor_turn_right = 0;
       if (ready && curr_pos >= 0 && curr_pos < POSITION_COUNT) {
         spindle_voltage = spindle_speed * data.pos[curr_pos].factor;
         spindle_speed_fb = spindle_voltage_fb * data.pos[curr_pos].recip;
@@ -267,7 +263,6 @@ FUNCTION(_) {
         pos_state = STATE_WAIT_STOP;
       }
       break;
-
     case STATE_WAIT_STOP:
       if (data.timer <= 0) {
         rtapi_print_msg(RTAPI_MSG_ERR, "mh700c-transm: Spindle stop timeout\n");
@@ -275,118 +270,35 @@ FUNCTION(_) {
       }
       if (spindle_stopped) {
         transm_switch = 1;
-        pos_state = STATE_INPUT_SET;
-      }
-      break;
-
-    case STATE_INPUT_SET:
-      req_state = data.pos[data.target_pos].input_state;
-      if (CHECK_SWITCH_POS(input_left, input_right, req_state)) {
-        pos_state = STATE_REDUCER_SET;
-      }
-      if (req_state == SWITCH_LEFT && !motor_turn_right) {
-        data.timer = setup_time;
-        motor_turn_right = 1;
-        pos_state = STATE_INPUT_DIR;
-      }
-      if (req_state == SWITCH_RIGHT && motor_turn_right) {
-        data.timer = setup_time;
-        motor_turn_right = 0;
-        pos_state = STATE_INPUT_DIR;
-      }
-      data.timer = switch_timeout;
-      pos_state = STATE_INPUT_MOVE;
-      break;
-
-    case STATE_INPUT_DIR:
-      if (data.timer <= 0) {
         data.timer = switch_timeout;
-        pos_state = STATE_INPUT_MOVE;
+        pos_state = SWITCH1;
       }
       break;
-
-    case STATE_INPUT_MOVE:
+    case SWITCH1:
+      if (data.timer <= 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "transm: Schaltzeit ueberschritten\n");
+        pos_state = STATE_ERROR;
+      }
       input_motor = 1;
+      motor_turn_right = 0;
+      if (curr_pos == 0 ) {
+            data.timer = switch_timeout;
+            pos_state = SWITCH2;
+      }
+      break;
+    case SWITCH2:
       if (data.timer <= 0) {
-        rtapi_print_msg(RTAPI_MSG_ERR, "mh700c-transm: Input stage switch timeout\n");
+        rtapi_print_msg(RTAPI_MSG_ERR, "transm: Schaltzeit ueberschritten\n");
         pos_state = STATE_ERROR;
       }
-      req_state = data.pos[data.target_pos].input_state;
-      if (CHECK_SWITCH_POS(input_left, input_right, req_state)) {
-        data.timer = overrun_time;
-        pos_state = STATE_INPUT_OVERRUN;
+      input_motor = 1;
+      motor_turn_right = 1;
+      if (curr_pos == 1 ) {
+            data.timer = switch_timeout;
+            pos_state = SWITCH1;
       }
       break;
-
-    case STATE_INPUT_OVERRUN:
-      if (data.timer <= 0) {
-        input_motor = 0;
-        data.timer = setup_time;
-        pos_state = STATE_INPUT_WAIT;
-      }
-      break;
-
-    case STATE_INPUT_WAIT:
-      if (data.timer <= 0) {
-        pos_state = STATE_REDUCER_SET;
-      }
-      break;
-
-    case STATE_REDUCER_SET:
-      req_state = data.pos[data.target_pos].reducer_state;
-      if (CHECK_SWITCH_POS(reducer_left, reducer_right, req_state)) {
-        pos_state = STATE_IDLE;
-      }
-      if (req_state == SWITCH_LEFT && motor_turn_right) {
-        data.timer = setup_time;
-        motor_turn_right = 0;
-        pos_state = STATE_REDUCER_DIR;
-      }
-      if (req_state == SWITCH_RIGHT && !motor_turn_right) {
-        data.timer = setup_time;
-        motor_turn_right = 1;
-        pos_state = STATE_REDUCER_DIR;
-      }
-      data.timer = switch_timeout;
-      pos_state = STATE_REDUCER_MOVE;
-      break;
-
-    case STATE_REDUCER_DIR:
-      if (data.timer <= 0) {
-        data.timer = switch_timeout;
-        pos_state = STATE_REDUCER_MOVE;
-      }
-      break;
-
-    case STATE_REDUCER_MOVE:
-      reducer_motor = 1;
-      if (data.timer <= 0) {
-        rtapi_print_msg(RTAPI_MSG_ERR, "mh700c-transm: Reducer stage switch timeout\n");
-        pos_state = STATE_ERROR;
-      }
-      req_state = data.pos[data.target_pos].reducer_state;
-      if (CHECK_SWITCH_POS(reducer_left, reducer_right, req_state)) {
-        data.timer = overrun_time;
-        pos_state = STATE_REDUCER_OVERRUN;
-      }
-      break;
-
-    case STATE_REDUCER_OVERRUN:
-      if (data.timer <= 0) {
-        reducer_motor = 0;
-        data.timer = setup_time;
-        pos_state = STATE_REDUCER_WAIT;
-      }
-      break;
-
-    case STATE_REDUCER_WAIT:
-      if (data.timer <= 0) {
-        pos_state = STATE_IDLE;
-      }
-      break;
-
     case STATE_ERROR:
-      reducer_motor = 0;
       input_motor = 0;
       motor_turn_right = 0;
       spindle_voltage = 0;
@@ -395,15 +307,13 @@ FUNCTION(_) {
       ready = 0;
       error = 1;
       break;
-
     default:
       pos_state = STATE_IDLE;
-  }
+}
 
   // reset state machine if estop is pressed
   if (!estop) {
     pos_state = STATE_IDLE;
-    reducer_motor = 0;
     input_motor = 0;
     motor_turn_right = 0;
     spindle_voltage = 0;
@@ -412,7 +322,7 @@ FUNCTION(_) {
     ready = 0;
     error = 0;
   }
+curr_pos_old = curr_pos ;
 
 }
-
 
