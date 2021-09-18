@@ -24,14 +24,9 @@ pin out bit transm_switch;
 pin out bit ready;
 pin out float pos_actual;
 pin out float pos_optimal;
-pin out float pos_old;
-pin out float pos_longn;
 pin out u32 pos_state;
 pin out bit pos_ok;
 pin out bit error;
-
-pin out bit pos_long;
-pin out float debugtimer2;
 
 param rw float stop_timeout = 10.0 "timeout for spindle stop";
 param rw float switch_timeout = 10.0 "timeout for switching the transmission";
@@ -87,11 +82,6 @@ typedef struct {
 
 } transm_data;
 
-
-  double timer2;
-  int curr_pos, curr_pos_old, curr_pos_timer;
-
-
 EXTRA_SETUP() {
   data.pos[0].reducer_state = SWITCH_RIGHT;
   data.pos[0].input_state   = SWITCH_LEFT;
@@ -113,15 +103,15 @@ FUNCTION(_) {
   transm_pos *pos;
   int voltage_change;
   int i;
-  int  opti_pos;
+  int curr_pos, opti_pos;
+  int curr_pos_old = 5;
   int selected;
   double min_rpm, all_min_rpm, all_max_rpm;
   double last_buffer, curr_buffer;
   int lock;
   int req_state;
-
-
-
+  double timer2 =0.3;
+  int poslong;
 
   // get period in seconds
   period_sec = (double)period * 1e-9;
@@ -216,8 +206,6 @@ FUNCTION(_) {
   // update debug data
   pos_actual = (double)(curr_pos);
   pos_optimal = (double)(opti_pos);
-  pos_old = (double)(curr_pos_old);
-  pos_longn = (double)(curr_pos_timer);
 
   // force pos ok, if optimal pos is selected
   // (needed for min/max speed fallback)
@@ -254,22 +242,6 @@ FUNCTION(_) {
   if (data.timer > 0) {
     data.timer -= period_sec;
   }
-  // set pos_long status
-if (timer2 >= 0) {
-  timer2 = timer2 - period_sec;
-  }
-if (timer2 <= 0 && (curr_pos == curr_pos_timer) ) {
-  pos_long = 1;
-  }
-else {
-  pos_long = 0;
-  } 
-if (curr_pos != curr_pos_old ){
-  curr_pos_timer = curr_pos ;
-  timer2 = 0.2;
-  }   
-  debugtimer2 = timer2;
-  curr_pos_old = curr_pos  ;
 // state machine for switching
   switch (pos_state) {
     case STATE_IDLE:
@@ -309,7 +281,7 @@ if (curr_pos != curr_pos_old ){
       }
       input_motor = 1;
       motor_turn_right = 0;
-      if (curr_pos == 0 && pos_long) {
+      if (curr_pos == 0 ) {
             data.timer = switch_timeout;
             pos_state = SWITCH2;
       }
@@ -321,7 +293,7 @@ if (curr_pos != curr_pos_old ){
       }
       input_motor = 1;
       motor_turn_right = 1;
-      if (curr_pos == 1 && pos_long) {
+      if (curr_pos == 1 ) {
             data.timer = switch_timeout;
             pos_state = SWITCH1;
       }
@@ -350,7 +322,7 @@ if (curr_pos != curr_pos_old ){
     ready = 0;
     error = 0;
   }
+curr_pos_old = curr_pos ;
 
 }
-
 

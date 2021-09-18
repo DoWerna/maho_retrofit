@@ -1,1 +1,1 @@
-pin+transm.input-motor pin+transm.pos-state pin+transm.pos-actual pin+transm.pos-ok pin+transm.motor-turn-right pin+hm2_7i97.0.7i84.0.0.output-05 pin+hm2_7i97.0.7i84.0.0.output-07 pin+hm2_7i97.0.7i84.0.0.output-03
+pin+transm.debugtimer2 pin+transm.pos-long pin+transm.pos-actual pin+transm.pos-old pin+transm.pos-longn
