@@ -83,13 +83,14 @@ typedef struct {
   int enable_auto_switch;
   int target_pos;
   double timer;
-
-
+  double timer2;
+  int curr_pos_old;
+  int curr_pos_timer;
 } transm_data;
 
 
-  double timer2;
-  int curr_pos, curr_pos_old, curr_pos_timer;
+
+  
 
 
 EXTRA_SETUP() {
@@ -119,6 +120,7 @@ FUNCTION(_) {
   double last_buffer, curr_buffer;
   int lock;
   int req_state;
+  int curr_pos;
 
 
 
@@ -216,8 +218,8 @@ FUNCTION(_) {
   // update debug data
   pos_actual = (double)(curr_pos);
   pos_optimal = (double)(opti_pos);
-  pos_old = (double)(curr_pos_old);
-  pos_longn = (double)(curr_pos_timer);
+  pos_old = (double)(data.curr_pos_old);
+  pos_longn = (double)(data.curr_pos_timer);
 
   // force pos ok, if optimal pos is selected
   // (needed for min/max speed fallback)
@@ -255,21 +257,21 @@ FUNCTION(_) {
     data.timer -= period_sec;
   }
   // set pos_long status
-if (timer2 >= 0) {
-  timer2 = timer2 - period_sec;
+if (data.timer2 >= 0) {
+  data.timer2 = data.timer2 - period_sec;
   }
-if (timer2 <= 0 && (curr_pos == curr_pos_timer) ) {
+if (data.timer2 <= 0 && (curr_pos == data.curr_pos_timer) ) {
   pos_long = 1;
   }
 else {
   pos_long = 0;
   } 
-if (curr_pos != curr_pos_old ){
-  curr_pos_timer = curr_pos ;
-  timer2 = 0.2;
+if (curr_pos != data.curr_pos_old ){
+  data.curr_pos_timer = curr_pos ;
+  data.timer2 = 0.2;
   }   
-  debugtimer2 = timer2;
-  curr_pos_old = curr_pos  ;
+  debugtimer2 = data.timer2;
+  data.curr_pos_old = curr_pos  ;
 // state machine for switching
   switch (pos_state) {
     case STATE_IDLE:
@@ -352,5 +354,6 @@ if (curr_pos != curr_pos_old ){
   }
 
 }
+
 
 
