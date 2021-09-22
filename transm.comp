@@ -101,16 +101,15 @@ EXTRA_SETUP() {
 
   data.pos[1].reducer_state = SWITCH_LEFT;
   data.pos[1].input_state   = SWITCH_RIGHT;
-  data.pos[1].factor        = 1;
-  data.pos[1].recip         = 1;
+  data.pos[1].factor        = 0.0079125;
+  data.pos[1].recip         = 126.382306477;
   data.pos[1].max_rpm       = 800;
 
   data.pos[2].reducer_state = SWITCH_RIGHT;
   data.pos[2].input_state   = SWITCH_RIGHT;
-  data.pos[2].factor        = 1;
-  data.pos[2].recip         = 1;
+  data.pos[2].factor        = 0.001266;
+  data.pos[2].recip         = 789.89;
   data.pos[2].max_rpm       = 5000;
-
 
   data.pos[3].reducer_state = SWITCH_LEFT;
   data.pos[3].input_state   = SWITCH_LEFT;
@@ -130,8 +129,7 @@ FUNCTION(_) {
   int i;
   int  opti_pos;
   int selected;
-  double min_rpm, all_min_rpm, all_max_rpm;
-  double last_buffer, curr_buffer;
+  double min_rpm;
   int lock;
   int req_state;
   int curr_pos;
@@ -168,9 +166,6 @@ FUNCTION(_) {
   // check for best matching position
   pos_ok = 0;
   opti_pos = -1;
-  last_buffer = -1;
-  all_min_rpm = -1;
-  all_max_rpm = -1;
   curr_pos = -1;
   for (i=0; i<POSITION_COUNT; i++) {
     pos = &data.pos[i];
@@ -182,7 +177,6 @@ FUNCTION(_) {
     if (selected) {
       curr_pos = i;
     }
-
     // check max_rpm value
     if (pos->max_rpm < 1.0) {
       pos->max_rpm = 1.0;
@@ -190,7 +184,7 @@ FUNCTION(_) {
     // calculate min_rpm value
     min_rpm = pos->max_rpm * data.min_max_ratio;
 
-    // minimum speed fallback
+/*    // minimum speed fallback
     if (all_min_rpm < 0 || min_rpm < all_min_rpm) {
       all_min_rpm = min_rpm;
       if (spindle_speed_abs < all_min_rpm) {
@@ -205,6 +199,7 @@ FUNCTION(_) {
         opti_pos = i;
       }
     }
+*/
 
     // position range matches
     if (spindle_speed_abs >= min_rpm && spindle_speed_abs <= pos->max_rpm) {
@@ -213,12 +208,6 @@ FUNCTION(_) {
         pos_ok = 1;
       }
 
-      // check for boundary buffer
-      curr_buffer = spindle_speed_abs - min_rpm;
-      if (last_buffer < 0 || curr_buffer > last_buffer) {
-        opti_pos = i;
-        last_buffer = pos->max_rpm - spindle_speed_abs;
-      }
     }
   }
 
