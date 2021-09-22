@@ -67,6 +67,7 @@ function _;
 
 typedef struct {
   double max_rpm;
+  double max_rpm_old;
   double factor;
   double recip;
   int reducer_state;
@@ -95,30 +96,15 @@ typedef struct {
 EXTRA_SETUP() {
   data.pos[0].reducer_state = SWITCH_RIGHT;
   data.pos[0].input_state   = SWITCH_LEFT;
-  data.pos[0].factor        = 1;
-  data.pos[0].recip         = 1;
-  data.pos[0].max_rpm       = 1;
 
   data.pos[1].reducer_state = SWITCH_LEFT;
   data.pos[1].input_state   = SWITCH_RIGHT;
-  data.pos[1].factor        = 1;
-  data.pos[1].recip         = 1;
-  data.pos[1].max_rpm       = 800;
 
   data.pos[2].reducer_state = SWITCH_RIGHT;
   data.pos[2].input_state   = SWITCH_RIGHT;
-  data.pos[2].factor        = 1;
-  data.pos[2].recip         = 1;
-  data.pos[2].max_rpm       = 5000;
-
 
   data.pos[3].reducer_state = SWITCH_LEFT;
   data.pos[3].input_state   = SWITCH_LEFT;
-  data.pos[3].factor        = 1;
-  data.pos[3].recip         = 1;
-  data.pos[3].max_rpm       = 10000;
-
-
   return 0;
 }
 
@@ -145,12 +131,11 @@ FUNCTION(_) {
   // get absolute speed
   spindle_speed_abs = spindle_speed >= 0 ? spindle_speed : -spindle_speed;
 
- /* // copy max rpm values
+  // copy max rpm values
   data.pos[0].max_rpm = max_rpm_1;
   data.pos[1].max_rpm = max_rpm_2;
   data.pos[2].max_rpm = max_rpm_3;
   data.pos[3].max_rpm = max_rpm_4;
- */
 
   // check for changed voltage parameters and calculate ratio
   voltage_change = 0;
@@ -187,6 +172,14 @@ FUNCTION(_) {
     if (pos->max_rpm < 1.0) {
       pos->max_rpm = 1.0;
     }
+
+    // calculate transmission factor
+    if (pos->max_rpm != pos->max_rpm_old || voltage_change) {
+      pos->max_rpm_old = pos->max_rpm;
+      pos->factor = max_voltage / pos->max_rpm;
+      pos->recip = 1 / pos->factor;
+    }
+
     // calculate min_rpm value
     min_rpm = pos->max_rpm * data.min_max_ratio;
 
