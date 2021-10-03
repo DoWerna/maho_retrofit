@@ -1,6 +1,6 @@
 component transm "MAHO MH700C transmission";
 
-author "Sascha Ittner";
+author "Sascha Ittner transm7";
 license "GPL";
 
 option singleton yes;
@@ -39,10 +39,6 @@ param rw float stop_timeout = 10.0 "timeout for spindle stop";
 param rw float switch_timeout = 10.0 "timeout for switching the transmission";
 param rw float overrun_time = 0.5 "overrun time for switching motor";
 param rw float setup_time = 0.2 "setup time for relays";
-param rw float max_rpm_1 = 127 "maximum spindle speed position 1";
-param rw float max_rpm_2 = 403 "maximum spindle speed position 2";
-param rw float max_rpm_3 = 989 "maximum spindle speed position 3";
-param rw float max_rpm_4 = 3135 "maximum spindle speed position 4";
 param rw float max_voltage = 9.000 "maximum spindle cmd voltage";
 param rw float min_voltage = 1.500 "minimum spindle cmd voltage";
 

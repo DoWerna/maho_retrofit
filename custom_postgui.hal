@@ -152,6 +152,7 @@ setp message.2.force true
 net message.oillevel hm2_7i97.0.7i84.0.0.input-01-not  message.1.trigger
 setp message.1.force true
 
-
-
+#gmoccapy spindle feedback
+net spindle-speed-fb gmoccapy.spindle_feedback_bar
+net spindle-ready gmoccapy.spindle_at_speed_led
 

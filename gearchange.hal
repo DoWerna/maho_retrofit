@@ -24,10 +24,6 @@ setp transm.stop-timeout [SPINDLE]STOP_TIMEOUT
 setp transm.switch-timeout [SPINDLE]TRANSM_TIMEOUT
 setp transm.overrun-time [SPINDLE]TRANSM_OVERRUN_TIME
 setp transm.setup-time [SPINDLE]TRANSM_SETUP_TIME
-setp transm.max-rpm-1 [SPINDLE]TRANSM_POS1_MAXSPEED
-setp transm.max-rpm-2 [SPINDLE]TRANSM_POS2_MAXSPEED
-setp transm.max-rpm-3 [SPINDLE]TRANSM_POS3_MAXSPEED
-setp transm.max-rpm-4 [SPINDLE]TRANSM_POS4_MAXSPEED
 setp transm.max-voltage [SPINDLE]MAX_VOLTAGE
 setp transm.min-voltage [SPINDLE]MIN_VOLTAGE
 
