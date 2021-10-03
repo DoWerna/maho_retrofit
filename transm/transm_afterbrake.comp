@@ -1,6 +1,6 @@
 component transm "MAHO MH700C transmission";
 
-author "Sascha Ittner";
+author "Sascha Ittner transm7";
 license "GPL";
 
 option singleton yes;
@@ -77,6 +77,8 @@ typedef struct {
 
 typedef struct {
   transm_pos pos[POSITION_COUNT];
+  int last_spindle_brake;
+  int enable_auto_switch;
   double timer;
   double timer2;
   int curr_pos_old;
@@ -121,6 +123,7 @@ FUNCTION(_) {
   int  opti_pos;
   int selected;
   int curr_pos;
+  int lock;
 
   // get period in seconds
   period_sec = (double)period * 1e-9;
@@ -169,6 +172,23 @@ else if (spindle_speed_abs >= 644 && spindle_speed_abs < 5001){
      pos_ok = 0;
   }   
 
+  // check for brake transition
+  if (!data.last_spindle_brake && spindle_brake) {
+    data.enable_auto_switch = 0;
+  }
+  if (data.last_spindle_brake && !spindle_brake) {
+    data.enable_auto_switch = 1;
+  }
+  data.last_spindle_brake = spindle_brake;
+
+  // first speed command after loosen brake -> force switch
+  // allow switch in automatic mode only after brake
+  lock = auto_mode;
+  if (spindle_speed != 0 && data.enable_auto_switch) {
+    data.enable_auto_switch = 0;
+    lock = 0;
+  }
+
   // update timer
   if (data.timer > 0) {
     data.timer -= period_sec;
@@ -204,7 +224,7 @@ else if (spindle_speed_abs >= 644 && spindle_speed_abs < 5001){
       transm_switch = 0;
       ready = 1;
       error = 0;
-      if (!pos_ok) {
+      if (!lock && !pos_ok) {
         spindle_voltage = 0;
         spindle_speed_fb = 0;
         ready = 0;

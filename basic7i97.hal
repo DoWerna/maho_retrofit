@@ -368,16 +368,17 @@ net tool-change-confirmed   iocontrol.0.tool-changed      <=  edge.0.out
 net tool-number             iocontrol.0.tool-prep-number  =>  hal_manualtoolchange.number
 net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
 
+# Gearchange
+source gearchange.hal
+
 #central lubrication
 loadusr -W /home/werner/linuxcnc/configs/basicneu_git/lube.py
 net lube-run lube.run => hm2_7i97.0.7i84.0.0.output-09 
 net machine-is-enabled lube.machine_status <= motion.motion-enabled
 #net spindle-on lube.spindle_status <= motion.spindle-on
-net spindle-enable lube.spindle_status
+net dout-spindle-enable lube.spindle_status
 net lube-ps-float-sw lube.pressuresw_floatsw <= hm2_7i97.0.7i84.0.0.input-06
 
-# Gearchange
-source gearchange.hal
 
 
 

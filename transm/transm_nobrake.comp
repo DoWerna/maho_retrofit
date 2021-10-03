@@ -1,6 +1,6 @@
 component transm "MAHO MH700C transmission";
 
-author "Sascha Ittner";
+author "Sascha Ittner transm7";
 license "GPL";
 
 option singleton yes;
@@ -16,6 +16,8 @@ pin in bit input_right;
 pin in bit auto_mode;
 pin in bit estop;
 
+
+pin out float spindle_abs;
 pin out float spindle_speed_fb;
 pin out float spindle_voltage;
 pin out bit input_motor;
@@ -67,7 +69,6 @@ function _;
 
 typedef struct {
   double max_rpm;
-  double max_rpm_old;
   double factor;
   double recip;
   int reducer_state;
@@ -76,12 +77,6 @@ typedef struct {
 
 typedef struct {
   transm_pos pos[POSITION_COUNT];
-  double max_voltage_old;
-  double min_voltage_old;
-  double min_max_ratio;
-  int last_spindle_brake;
-  int enable_auto_switch;
-  int target_pos;
   double timer;
   double timer2;
   int curr_pos_old;
@@ -89,22 +84,32 @@ typedef struct {
 } transm_data;
 
 
-
-  
-
-
 EXTRA_SETUP() {
   data.pos[0].reducer_state = SWITCH_RIGHT;
   data.pos[0].input_state   = SWITCH_LEFT;
+  data.pos[0].factor        = 0;
+  data.pos[0].recip         = 0;
+  data.pos[0].max_rpm       = 1;
 
   data.pos[1].reducer_state = SWITCH_LEFT;
   data.pos[1].input_state   = SWITCH_RIGHT;
+  data.pos[1].factor        = 0.00984447900467;
+  data.pos[1].recip         = 101.579778879;
+  data.pos[1].max_rpm       = 643;
 
   data.pos[2].reducer_state = SWITCH_RIGHT;
   data.pos[2].input_state   = SWITCH_RIGHT;
+  data.pos[2].factor        = 0.001266;
+  data.pos[2].recip         = 789.89;
+  data.pos[2].max_rpm       = 5000;
 
   data.pos[3].reducer_state = SWITCH_LEFT;
   data.pos[3].input_state   = SWITCH_LEFT;
+  data.pos[3].factor        = 1;
+  data.pos[3].recip         = 1;
+  data.pos[3].max_rpm       = 10;
+
+
   return 0;
 }
 
@@ -112,18 +117,10 @@ FUNCTION(_) {
   double period_sec;
   double spindle_speed_abs;
   transm_pos *pos;
-  int voltage_change;
   int i;
   int  opti_pos;
   int selected;
-  double min_rpm, all_min_rpm, all_max_rpm;
-  double last_buffer, curr_buffer;
-  int lock;
-  int req_state;
   int curr_pos;
-
-
-
 
   // get period in seconds
   period_sec = (double)period * 1e-9;
@@ -131,88 +128,30 @@ FUNCTION(_) {
   // get absolute speed
   spindle_speed_abs = spindle_speed >= 0 ? spindle_speed : -spindle_speed;
 
-  // copy max rpm values
-  data.pos[0].max_rpm = max_rpm_1;
-  data.pos[1].max_rpm = max_rpm_2;
-  data.pos[2].max_rpm = max_rpm_3;
-  data.pos[3].max_rpm = max_rpm_4;
-
-  // check for changed voltage parameters and calculate ratio
-  voltage_change = 0;
-  if (max_voltage != data.max_voltage_old || min_voltage != data.min_voltage_old) {
-    voltage_change = 1;
-    data.max_voltage_old = max_voltage;
-    data.min_voltage_old = min_voltage;
-    if (max_voltage == 0) {
-      data.min_max_ratio = 0;
-    } else {
-      data.min_max_ratio = min_voltage / max_voltage;
-    }
-  }
-
   // check for best matching position
-  pos_ok = 0;
-  opti_pos = -1;
-  last_buffer = -1;
-  all_min_rpm = -1;
-  all_max_rpm = -1;
   curr_pos = -1;
   for (i=0; i<POSITION_COUNT; i++) {
     pos = &data.pos[i];
-
-    // check current pos
+   // check current pos
     selected =
       CHECK_SWITCH_POS(reducer_left, reducer_right, pos->reducer_state) &&
       CHECK_SWITCH_POS(input_left, input_right, pos->input_state);
     if (selected) {
       curr_pos = i;
     }
+  }
 
-    // check max_rpm value
-    if (pos->max_rpm < 1.0) {
-      pos->max_rpm = 1.0;
-    }
-
-    // calculate transmission factor
-    if (pos->max_rpm != pos->max_rpm_old || voltage_change) {
-      pos->max_rpm_old = pos->max_rpm;
-      pos->factor = max_voltage / pos->max_rpm;
-      pos->recip = 1 / pos->factor;
-    }
-
-    // calculate min_rpm value
-    min_rpm = pos->max_rpm * data.min_max_ratio;
-
-    // minimum speed fallback
-    if (all_min_rpm < 0 || min_rpm < all_min_rpm) {
-      all_min_rpm = min_rpm;
-      if (spindle_speed_abs < all_min_rpm) {
-        opti_pos = i;
-      }
-    }
-
-    // maximum speed fallback
-    if (all_max_rpm < 0 || pos->max_rpm > all_max_rpm) {
-      all_max_rpm = pos->max_rpm;
-      if (spindle_speed_abs > all_max_rpm) {
-        opti_pos = i;
-      }
-    }
-
-    // position range matches
-    if (spindle_speed_abs >= min_rpm && spindle_speed_abs <= pos->max_rpm) {
-      // check if current position is ok
-      if (selected) {
-        pos_ok = 1;
-      }
-
-      // check for boundary buffer
-      curr_buffer = spindle_speed_abs - min_rpm;
-      if (last_buffer < 0 || curr_buffer > last_buffer) {
-        opti_pos = i;
-        last_buffer = pos->max_rpm - spindle_speed_abs;
-      }
-    }
+if (spindle_speed_abs == 0){
+  opti_pos = curr_pos;
+  }
+else if (spindle_speed_abs > 0 && spindle_speed_abs < 12){
+  opti_pos = 0;
+  }
+else if (spindle_speed_abs >= 12 && spindle_speed_abs < 643){
+  opti_pos = 1;
+  }
+else if (spindle_speed_abs >= 644 && spindle_speed_abs < 5001){
+  opti_pos = 2;
   }
 
   // update debug data
@@ -220,75 +159,55 @@ FUNCTION(_) {
   pos_optimal = (double)(opti_pos);
   pos_old = (double)(data.curr_pos_old);
   pos_longn = (double)(data.curr_pos_timer);
+  spindle_abs = (double)(spindle_speed_abs);
 
   // force pos ok, if optimal pos is selected
-  // (needed for min/max speed fallback)
   if (curr_pos == opti_pos) {
     pos_ok = 1;
   }
-
-  // position is ok, if spindle is stopped
-  if (spindle_speed == 0) {
-    pos_ok = 1;
-  }
-
-  // check for brake transition
-  if (!data.last_spindle_brake && spindle_brake) {
-    data.enable_auto_switch = 0;
-  }
-  if (data.last_spindle_brake && !spindle_brake) {
-    data.enable_auto_switch = 1;
-  }
-  data.last_spindle_brake = spindle_brake;
-
-  // first speed command after loosen brake -> force switch
-  // allow switch in automatic mode only after brake
-  lock = auto_mode;
-  if (spindle_speed != 0 && data.enable_auto_switch) {
-    data.enable_auto_switch = 0;
-    lock = 0;
-    if (curr_pos != opti_pos) {
-      pos_ok = 0;
-    }
-  }
+  else {
+     pos_ok = 0;
+  }   
 
   // update timer
   if (data.timer > 0) {
     data.timer -= period_sec;
   }
   // set pos_long status
-if (data.timer2 >= 0) {
-  data.timer2 = data.timer2 - period_sec;
+  if (data.timer2 >= 0) {
+    data.timer2 = data.timer2 - period_sec;
   }
-if (data.timer2 <= 0 && (curr_pos == data.curr_pos_timer) ) {
-  pos_long = 1;
+  if (data.timer2 <= 0 && (curr_pos == data.curr_pos_timer) ) {
+    pos_long = 1;
   }
-else {
-  pos_long = 0;
-  } 
-if (curr_pos != data.curr_pos_old ){
+  else {
+    pos_long = 0;
+  }
+  if (curr_pos != data.curr_pos_old ){
   data.curr_pos_timer = curr_pos ;
   data.timer2 = 0.2;
   }   
   debugtimer2 = data.timer2;
-  data.curr_pos_old = curr_pos  ;
-// state machine for switching
+  data.curr_pos_old = curr_pos;
+  
+  // state machine for switching
   switch (pos_state) {
     case STATE_IDLE:
       input_motor = 0;
       motor_turn_right = 0;
-      if (ready && curr_pos >= 0 && curr_pos < POSITION_COUNT) {
+
+       //if (pos_ok) {
+       if (ready && pos_ok) {
         spindle_voltage = spindle_speed * data.pos[curr_pos].factor;
         spindle_speed_fb = spindle_voltage_fb * data.pos[curr_pos].recip;
       }
       transm_switch = 0;
       ready = 1;
       error = 0;
-      if (!lock && !pos_ok) {
+      if (!pos_ok) {
         spindle_voltage = 0;
         spindle_speed_fb = 0;
         ready = 0;
-        data.target_pos = opti_pos;
         data.timer = stop_timeout;
         pos_state = STATE_WAIT_STOP;
       }
@@ -311,8 +230,15 @@ if (curr_pos != data.curr_pos_old ){
       }
       input_motor = 1;
       motor_turn_right = 0;
+      if (pos_ok && curr_pos == 2){
+            pos_state = STATE_IDLE;
+      }
       if (curr_pos == 0 && pos_long) {
             data.timer = switch_timeout;
+            if (pos_ok){
+                  pos_state = STATE_IDLE;
+                  break;
+            }
             pos_state = SWITCH2;
       }
       break;
@@ -323,8 +249,15 @@ if (curr_pos != data.curr_pos_old ){
       }
       input_motor = 1;
       motor_turn_right = 1;
+      if (pos_ok && curr_pos == 2){
+            pos_state = STATE_IDLE;
+      }
       if (curr_pos == 1 && pos_long) {
             data.timer = switch_timeout;
+            if (pos_ok){
+                 pos_state = STATE_IDLE;
+                 break;
+            }
             pos_state = SWITCH1;
       }
       break;
@@ -337,6 +270,8 @@ if (curr_pos != data.curr_pos_old ){
       ready = 0;
       error = 1;
       break;
+      
+      
     default:
       pos_state = STATE_IDLE;
 }
