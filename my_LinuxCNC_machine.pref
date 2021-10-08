@@ -61,13 +61,13 @@ blockdel = False
 show_offsets = False
 show_dtg = False
 view_tool_path = False
-view_dimension = False
+view_dimension = True
 run_from_line = no_run
 unlock_way = no
 show_preview_on_offset = False
 use_keyboard_shortcuts = False
-tool_in_spindle = 1
-offset_axis_x = -10.0
+tool_in_spindle = 2
+offset_axis_x = 0.0
 offset_axis_y = 0.0
 offset_axis_z = 0.0
 

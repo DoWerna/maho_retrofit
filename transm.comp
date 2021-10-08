@@ -89,14 +89,18 @@ EXTRA_SETUP() {
 
   data.pos[1].reducer_state = SWITCH_LEFT;
   data.pos[1].input_state   = SWITCH_RIGHT;
-  data.pos[1].factor        = 0.00984447900467;
-  data.pos[1].recip         = 101.579778879;
+//  data.pos[1].factor        = 0.00984447900467;
+  data.pos[1].factor        = 0.009420554067;
+//  data.pos[1].recip         = 101.579778879;
+  data.pos[1].recip         = 106.150869007;
   data.pos[1].max_rpm       = 643;
 
   data.pos[2].reducer_state = SWITCH_RIGHT;
   data.pos[2].input_state   = SWITCH_RIGHT;
-  data.pos[2].factor        = 0.001266;
-  data.pos[2].recip         = 789.89;
+//  data.pos[2].factor        = 0.001266;
+  data.pos[2].factor        = 0.00121148325359;
+//  data.pos[2].recip         = 789.89;
+  data.pos[2].recip         = 825.434441624; 
   data.pos[2].max_rpm       = 5000;
 
   data.pos[3].reducer_state = SWITCH_LEFT;
