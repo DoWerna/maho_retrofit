@@ -156,3 +156,6 @@ setp message.1.force true
 net spindle-speed-fb gmoccapy.spindle_feedback_bar
 net spindle-ready gmoccapy.spindle_at_speed_led
 
+#gmoccapy toolchange
+net tooloffset-z gmoccapy.tooloffset-z <= motion.tooloffset.z
+
