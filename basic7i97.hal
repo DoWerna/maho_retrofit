@@ -353,21 +353,6 @@ net machine-is-enabled        <=  motion.motion-enabled
 net maschine-ein hm2_7i97.0.7i84.0.0.input-00 => halui.machine.on     # 200
 net maschine-aus hm2_7i97.0.7i84.0.0.input-00-not => halui.machine.off 
 
-
-#  ---manual tool change signals---
-loadusr -W hal_manualtoolchange
-setp edge.0.out-width-ns 1000000000
-
-net tool-change-request iocontrol.0.tool-change  =>  hal_manualtoolchange.change
-net maho_panel.r7c3_sig-out matrix_kb.0.key.r7c3   and2.10.in0    
-net tool-change-request             =>   and2.10.in1
-net tool.tooluncl     toggle.3.in   <= and2.10.out
-net tool.output       toggle.3.out  => hm2_7i97.0.7i84.0.0.output-04
-net tool.output                     => edge.0.in
-net tool-change-confirmed   iocontrol.0.tool-changed      <=  edge.0.out
-net tool-number             iocontrol.0.tool-prep-number  =>  hal_manualtoolchange.number
-net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
-
 # Gearchange
 source gearchange.hal
 

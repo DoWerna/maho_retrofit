@@ -159,3 +159,15 @@ net spindle-ready gmoccapy.spindle_at_speed_led
 #gmoccapy toolchange
 net tooloffset-z gmoccapy.tooloffset-z <= motion.tooloffset.z
 
+setp edge.0.out-width-ns 1000000000
+net tool-change-request iocontrol.0.tool-change  =>  gmoccapy.toolchange-change
+net maho_panel.r7c3_sig-out matrix_kb.0.key.r7c3   and2.10.in0    
+net tool-change-request             =>   and2.10.in1
+net tool.tooluncl     toggle.3.in   <= and2.10.out
+net tool.output       toggle.3.out  => hm2_7i97.0.7i84.0.0.output-04
+net tool.output                     => edge.0.in
+net tool-change-confirmed  iocontrol.0.tool-changed      <=  edge.0.out
+net tool-number             iocontrol.0.tool-prep-number  =>  gmoccapy.toolchange-number
+net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
+
+
