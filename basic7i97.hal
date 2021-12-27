@@ -14,14 +14,13 @@ setp    [HMOT](CARD0).watchdog.timeout_ns 5000000
 loadrt pid names=pid.x,pid.y,pid.z,pid.s
 
 loadrt or2 count=4
-loadrt and2 count=11
+loadrt and2 count=12
 loadrt matrix_kb config=8x8
 loadrt toggle count=4
 loadrt toggle2nist count=2
-loadrt not count=2
+loadrt not count=3
 loadrt mux8 names=muxfeed,shw.step-choice
 loadrt conv_float_s32
-loadrt edge count=1 #tool 
 loadrt message count=3 messages="Zentralschmierung ohne Öldruck,Ölstand KSS Lüfter Hauptantrieb,Öldruckschalter defekt"
 loadrt transm 
 loadrt spindle_mh500
@@ -47,6 +46,7 @@ addf and2.4 servo-thread
 addf and2.5 servo-thread
 addf and2.6 servo-thread
 addf and2.10 servo-thread #tool uncl
+addf and2.11 servo-thread #tool uncl
 addf toggle.0 servo-thread
 addf toggle.1 servo-thread
 addf toggle.2 servo-thread #pause
@@ -56,9 +56,9 @@ addf toggle2nist.0 servo-thread
 addf toggle2nist.1 servo-thread #pause
 addf not.0 servo-thread
 addf not.1 servo-thread
+addf not.2 servo-thread #tool
 addf muxfeed servo-thread
 addf conv-float-s32.0 servo-thread
-addf edge.0 servo-thread #tool
 addf message.0 servo-thread
 addf message.1 servo-thread
 addf message.2 servo-thread
@@ -356,16 +356,17 @@ net maschine-aus hm2_7i97.0.7i84.0.0.input-00-not => halui.machine.off
 
 #  ---manual tool change signals---
 loadusr -W hal_manualtoolchange
-setp edge.0.out-width-ns 1000000000
 
 net tool-change-request iocontrol.0.tool-change  =>  hal_manualtoolchange.change
 net maho_panel.r7c3_sig-out matrix_kb.0.key.r7c3   and2.10.in0    
 net tool-change-request             =>   and2.10.in1
 net tool.tooluncl     toggle.3.in   <= and2.10.out
 net tool.output       toggle.3.out  => hm2_7i97.0.7i84.0.0.output-04
-net tool.output                     => edge.0.in
-net tool-change-confirmed   iocontrol.0.tool-changed      <=  edge.0.out
-net tool-number             iocontrol.0.tool-prep-number  =>  hal_manualtoolchange.number
+net tool.output       not.2.in
+net tool.output-not   not.2.out     and2.11.in0
+net tool.confirm     matrix_kb.0.key.r6c1  and2.11.in1
+net tool.confirm-and-notoutput and2.11.out iocontrol.0.tool-changed 
+net tool-number             iocontrol.0.tool-prep-number  =>  hal_manualtoolchange.number#
 net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
 
 # Gearchange
